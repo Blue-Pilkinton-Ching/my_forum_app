@@ -1,3 +1,4 @@
+pub mod comment;
 pub mod post;
 use hdk::prelude::*;
 use posts_integrity::*;

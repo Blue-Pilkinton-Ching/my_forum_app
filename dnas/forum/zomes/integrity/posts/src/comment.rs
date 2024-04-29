@@ -1,37 +1,48 @@
 use hdi::prelude::*;
 #[hdk_entry_helper]
 #[derive(Clone, PartialEq)]
-pub struct Post {
-    pub title: String,
-    pub content: String,
+pub struct Comment {
+    pub comment_content: String,
+    pub post_hash: ActionHash,
 }
-pub fn validate_create_post(
+pub fn validate_create_comment(
     _action: EntryCreationAction,
-    _post: Post,
+    comment: Comment,
 ) -> ExternResult<ValidateCallbackResult> {
+    let record = must_get_valid_record(comment.post_hash.clone())?;
+    let _post: crate::Post = record
+        .entry()
+        .to_app_option()
+        .map_err(|e| wasm_error!(e))?
+        .ok_or(
+            wasm_error!(
+                WasmErrorInner::Guest(String::from("Dependant action must be accompanied by an entry"))
+            ),
+        )?;
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_update_post(
+pub fn validate_update_comment(
     _action: Update,
-    _post: Post,
+    _comment: Comment,
     _original_action: EntryCreationAction,
-    _original_post: Post,
+    _original_comment: Comment,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(ValidateCallbackResult::Valid)
+    Ok(ValidateCallbackResult::Invalid(String::from("Comments cannot be updated")))
 }
-pub fn validate_delete_post(
+pub fn validate_delete_comment(
     _action: Delete,
     _original_action: EntryCreationAction,
-    _original_post: Post,
+    _original_comment: Comment,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(ValidateCallbackResult::Invalid(String::from("Posts cannot be deleted")))
+    Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_create_link_post_updates(
+pub fn validate_create_link_post_to_comments(
     _action: CreateLink,
     base_address: AnyLinkableHash,
     target_address: AnyLinkableHash,
     _tag: LinkTag,
 ) -> ExternResult<ValidateCallbackResult> {
+    // Check the entry type for the given action hash
     let action_hash = base_address
         .into_action_hash()
         .ok_or(
@@ -49,6 +60,7 @@ pub fn validate_create_link_post_updates(
                 WasmErrorInner::Guest(String::from("Linked action must reference an entry"))
             ),
         )?;
+    // Check the entry type for the given action hash
     let action_hash = target_address
         .into_action_hash()
         .ok_or(
@@ -57,7 +69,7 @@ pub fn validate_create_link_post_updates(
             ),
         )?;
     let record = must_get_valid_record(action_hash)?;
-    let _post: crate::Post = record
+    let _comment: crate::Comment = record
         .entry()
         .to_app_option()
         .map_err(|e| wasm_error!(e))?
@@ -66,18 +78,16 @@ pub fn validate_create_link_post_updates(
                 WasmErrorInner::Guest(String::from("Linked action must reference an entry"))
             ),
         )?;
+    // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }
-pub fn validate_delete_link_post_updates(
+pub fn validate_delete_link_post_to_comments(
     _action: DeleteLink,
     _original_action: CreateLink,
     _base: AnyLinkableHash,
     _target: AnyLinkableHash,
     _tag: LinkTag,
 ) -> ExternResult<ValidateCallbackResult> {
-    Ok(
-        ValidateCallbackResult::Invalid(
-            String::from("PostUpdates links cannot be deleted"),
-        ),
-    )
+    // TODO: add the appropriate validation rules
+    Ok(ValidateCallbackResult::Valid)
 }

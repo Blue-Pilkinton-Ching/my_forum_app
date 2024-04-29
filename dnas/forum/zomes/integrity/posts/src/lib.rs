@@ -1,3 +1,5 @@
+pub mod comment;
+pub use comment::*;
 pub mod post;
 pub use post::*;
 use hdi::prelude::*;
@@ -7,11 +9,13 @@ use hdi::prelude::*;
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     Post(Post),
+    Comment(Comment),
 }
 #[derive(Serialize, Deserialize)]
 #[hdk_link_types]
 pub enum LinkTypes {
     PostUpdates,
+    PostToComments,
 }
 #[hdk_extern]
 pub fn genesis_self_check(
@@ -38,6 +42,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 post,
                             )
                         }
+                        EntryTypes::Comment(comment) => {
+                            validate_create_comment(
+                                EntryCreationAction::Create(action),
+                                comment,
+                            )
+                        }
                     }
                 }
                 OpEntry::UpdateEntry { app_entry, action, .. } => {
@@ -46,6 +56,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                             validate_create_post(
                                 EntryCreationAction::Update(action),
                                 post,
+                            )
+                        }
+                        EntryTypes::Comment(comment) => {
+                            validate_create_comment(
+                                EntryCreationAction::Update(action),
+                                comment,
                             )
                         }
                     }
@@ -62,6 +78,17 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     action,
                 } => {
                     match (app_entry, original_app_entry) {
+                        (
+                            EntryTypes::Comment(comment),
+                            EntryTypes::Comment(original_comment),
+                        ) => {
+                            validate_update_comment(
+                                action,
+                                comment,
+                                original_action,
+                                original_comment,
+                            )
+                        }
                         (EntryTypes::Post(post), EntryTypes::Post(original_post)) => {
                             validate_update_post(
                                 action,
@@ -90,6 +117,9 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         EntryTypes::Post(post) => {
                             validate_delete_post(action, original_action, post)
                         }
+                        EntryTypes::Comment(comment) => {
+                            validate_delete_comment(action, original_action, comment)
+                        }
                     }
                 }
                 _ => Ok(ValidateCallbackResult::Valid),
@@ -105,6 +135,14 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             match link_type {
                 LinkTypes::PostUpdates => {
                     validate_create_link_post_updates(
+                        action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::PostToComments => {
+                    validate_create_link_post_to_comments(
                         action,
                         base_address,
                         target_address,
@@ -131,6 +169,15 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         tag,
                     )
                 }
+                LinkTypes::PostToComments => {
+                    validate_delete_link_post_to_comments(
+                        action,
+                        original_action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
             }
         }
         FlatOp::StoreRecord(store_record) => {
@@ -141,6 +188,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                             validate_create_post(
                                 EntryCreationAction::Create(action),
                                 post,
+                            )
+                        }
+                        EntryTypes::Comment(comment) => {
+                            validate_create_comment(
+                                EntryCreationAction::Create(action),
+                                comment,
                             )
                         }
                     }
@@ -192,6 +245,37 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                     post,
                                     original_action,
                                     original_post,
+                                )
+                            } else {
+                                Ok(result)
+                            }
+                        }
+                        EntryTypes::Comment(comment) => {
+                            let result = validate_create_comment(
+                                EntryCreationAction::Update(action.clone()),
+                                comment.clone(),
+                            )?;
+                            if let ValidateCallbackResult::Valid = result {
+                                let original_comment: Option<Comment> = original_record
+                                    .entry()
+                                    .to_app_option()
+                                    .map_err(|e| wasm_error!(e))?;
+                                let original_comment = match original_comment {
+                                    Some(comment) => comment,
+                                    None => {
+                                        return Ok(
+                                            ValidateCallbackResult::Invalid(
+                                                "The updated entry type must be the same as the original entry type"
+                                                    .to_string(),
+                                            ),
+                                        );
+                                    }
+                                };
+                                validate_update_comment(
+                                    action,
+                                    comment,
+                                    original_action,
+                                    original_comment,
                                 )
                             } else {
                                 Ok(result)
@@ -254,6 +338,13 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         EntryTypes::Post(original_post) => {
                             validate_delete_post(action, original_action, original_post)
                         }
+                        EntryTypes::Comment(original_comment) => {
+                            validate_delete_comment(
+                                action,
+                                original_action,
+                                original_comment,
+                            )
+                        }
                     }
                 }
                 OpRecord::CreateLink {
@@ -266,6 +357,14 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     match link_type {
                         LinkTypes::PostUpdates => {
                             validate_create_link_post_updates(
+                                action,
+                                base_address,
+                                target_address,
+                                tag,
+                            )
+                        }
+                        LinkTypes::PostToComments => {
+                            validate_create_link_post_to_comments(
                                 action,
                                 base_address,
                                 target_address,
@@ -299,6 +398,15 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     match link_type {
                         LinkTypes::PostUpdates => {
                             validate_delete_link_post_updates(
+                                action,
+                                create_link.clone(),
+                                base_address,
+                                create_link.target_address,
+                                create_link.tag,
+                            )
+                        }
+                        LinkTypes::PostToComments => {
+                            validate_delete_link_post_to_comments(
                                 action,
                                 create_link.clone(),
                                 base_address,

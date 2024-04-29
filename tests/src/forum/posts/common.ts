@@ -21,3 +21,23 @@ export async function createPost(cell: CallableCell, post = undefined): Promise<
     });
 }
 
+
+
+export async function sampleComment(cell: CallableCell, partialComment = {}) {
+    return {
+        ...{
+	  comment_content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+          post_hash: (await createPost(cell)).signed_action.hashed.hash,
+        },
+        ...partialComment
+    };
+}
+
+export async function createComment(cell: CallableCell, comment = undefined): Promise<Record> {
+    return cell.callZome({
+      zome_name: "posts",
+      fn_name: "create_comment",
+      payload: comment || await sampleComment(cell),
+    });
+}
+

@@ -36,6 +36,7 @@ export type PostsSignal = {
 };
 
 export type EntryTypes =
+ | ({ type: 'Comment'; } & Comment)
  | ({  type: 'Post'; } & Post);
 
 
@@ -44,5 +45,14 @@ export interface Post {
   title: string;
 
   content: string;
+}
+
+
+
+
+export interface Comment { 
+  comment_content: string;
+
+  post_hash: ActionHash;
 }
 
