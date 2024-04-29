@@ -16,6 +16,7 @@ pub enum EntryTypes {
 pub enum LinkTypes {
     PostUpdates,
     PostToComments,
+    AllPosts,
 }
 #[hdk_extern]
 pub fn genesis_self_check(
@@ -149,6 +150,14 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         tag,
                     )
                 }
+                LinkTypes::AllPosts => {
+                    validate_create_link_all_posts(
+                        action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
             }
         }
         FlatOp::RegisterDeleteLink {
@@ -171,6 +180,15 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 }
                 LinkTypes::PostToComments => {
                     validate_delete_link_post_to_comments(
+                        action,
+                        original_action,
+                        base_address,
+                        target_address,
+                        tag,
+                    )
+                }
+                LinkTypes::AllPosts => {
+                    validate_delete_link_all_posts(
                         action,
                         original_action,
                         base_address,
@@ -371,6 +389,14 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 tag,
                             )
                         }
+                        LinkTypes::AllPosts => {
+                            validate_create_link_all_posts(
+                                action,
+                                base_address,
+                                target_address,
+                                tag,
+                            )
+                        }
                     }
                 }
                 OpRecord::DeleteLink { original_action_hash, base_address, action } => {
@@ -407,6 +433,15 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         }
                         LinkTypes::PostToComments => {
                             validate_delete_link_post_to_comments(
+                                action,
+                                create_link.clone(),
+                                base_address,
+                                create_link.target_address,
+                                create_link.tag,
+                            )
+                        }
+                        LinkTypes::AllPosts => {
+                            validate_delete_link_all_posts(
                                 action,
                                 create_link.clone(),
                                 base_address,

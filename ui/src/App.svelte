@@ -3,7 +3,6 @@
   import type { ActionHash, AppAgentClient } from '@holochain/client';
   import { AppAgentWebsocket } from '@holochain/client';
   import '@material/mwc-circular-progress';
-
   import { clientContext } from './contexts';
 
   let client: AppAgentClient | undefined;
@@ -30,7 +29,6 @@
     </div>
   {:else}
     <div id="content" style="display: flex; flex-direction: column; flex: 1;">
-      <h2>EDIT ME! Add the components of your app here.</h2>
 
       <span>Look in the <code>ui/src/DNA/ZOME</code> folders for UI elements that are generated with <code>hc scaffold entry-type</code>, <code>hc scaffold collection</code> and <code>hc scaffold link-type</code> and add them here as appropriate.</span>
         

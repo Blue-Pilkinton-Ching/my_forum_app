@@ -9,6 +9,8 @@ pub fn create_post(post: Post) -> ExternResult<Record> {
                 WasmErrorInner::Guest(String::from("Could not find the newly created Post"))
             ),
         )?;
+    let path = Path::from("all_posts");
+    create_link(path.path_entry_hash()?, post_hash.clone(), LinkTypes::AllPosts, ())?;
     Ok(record)
 }
 #[hdk_extern]
