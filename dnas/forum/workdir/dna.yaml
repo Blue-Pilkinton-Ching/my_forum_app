@@ -5,6 +5,17 @@ integrity:
   network_seed: ~
   properties: ~
   origin_time: 1714431040493948
-  zomes: []
+  zomes:
+    - name: posts_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/posts_integrity.wasm"
+      dependencies: ~
+      dylib: ~
 coordinator:
-  zomes: []
+  zomes:
+    - name: posts
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/posts.wasm"
+      dependencies:
+        - name: posts_integrity
+      dylib: ~
