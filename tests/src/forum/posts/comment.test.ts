@@ -1,6 +1,6 @@
 import { assert, test } from "vitest";
 
-import { runScenario, dhtSync, CallableCell } from '@holochain/tryorama';
+import { runScenario, dhtSync, CallableCell } from "@holochain/tryorama";
 import {
   NewEntryAction,
   ActionHash,
@@ -12,24 +12,27 @@ import {
   AppBundleSource,
   fakeActionHash,
   fakeAgentPubKey,
-  fakeEntryHash
-} from '@holochain/client';
-import { decode } from '@msgpack/msgpack';
+  fakeEntryHash,
+} from "@holochain/client";
+import { decode } from "@msgpack/msgpack";
 
-import { createComment, sampleComment } from './common.js';
+import { createComment, sampleComment } from "./common.js";
 
-test('create Comment', async () => {
-  await runScenario(async scenario => {
+test("create Comment", async () => {
+  await runScenario(async (scenario) => {
     // Construct proper paths for your app.
     // This assumes app bundle created by the `hc app pack` command.
-    const testAppPath = process.cwd() + '/../workdir/my_forum_app.happ';
+    const testAppPath = process.cwd() + "/../workdir/my_forum_app.happ";
 
-    // Set up the app to be installed 
+    // Set up the app to be installed
     const appSource = { appBundleSource: { path: testAppPath } };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
-    const [alice, bob] = await scenario.addPlayersWithApps([appSource, appSource]);
+    const [alice, bob] = await scenario.addPlayersWithApps([
+      appSource,
+      appSource,
+    ]);
 
     // Shortcut peer discovery through gossip and register all agents in every
     // conductor of the scenario.
@@ -41,18 +44,21 @@ test('create Comment', async () => {
   });
 });
 
-test('create and read Comment', async () => {
-  await runScenario(async scenario => {
+test("create and read Comment", async () => {
+  await runScenario(async (scenario) => {
     // Construct proper paths for your app.
     // This assumes app bundle created by the `hc app pack` command.
-    const testAppPath = process.cwd() + '/../workdir/my_forum_app.happ';
+    const testAppPath = process.cwd() + "/../workdir/my_forum_app.happ";
 
-    // Set up the app to be installed 
+    // Set up the app to be installed
     const appSource = { appBundleSource: { path: testAppPath } };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
-    const [alice, bob] = await scenario.addPlayersWithApps([appSource, appSource]);
+    const [alice, bob] = await scenario.addPlayersWithApps([
+      appSource,
+      appSource,
+    ]);
 
     // Shortcut peer discovery through gossip and register all agents in every
     // conductor of the scenario.
@@ -73,32 +79,37 @@ test('create and read Comment', async () => {
       fn_name: "get_comment",
       payload: record.signed_action.hashed.hash,
     });
-    assert.deepEqual(sample, decode((createReadOutput.entry as any).Present.entry) as any);
+    assert.deepEqual(
+      sample,
+      decode((createReadOutput.entry as any).Present.entry) as any,
+    );
 
     // Bob gets the Posts for the new Comment
     let linksToPosts: Link[] = await bob.cells[0].callZome({
       zome_name: "posts",
       fn_name: "get_comments_for_post",
-      payload: sample.post_hash
+      payload: sample.post_hash,
     });
     assert.equal(linksToPosts.length, 1);
     assert.deepEqual(linksToPosts[0].target, record.signed_action.hashed.hash);
   });
 });
 
-
-test('create and delete Comment', async () => {
-  await runScenario(async scenario => {
+test("create and delete Comment", async () => {
+  await runScenario(async (scenario) => {
     // Construct proper paths for your app.
     // This assumes app bundle created by the `hc app pack` command.
-    const testAppPath = process.cwd() + '/../workdir/my_forum_app.happ';
+    const testAppPath = process.cwd() + "/../workdir/my_forum_app.happ";
 
-    // Set up the app to be installed 
+    // Set up the app to be installed
     const appSource = { appBundleSource: { path: testAppPath } };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
-    const [alice, bob] = await scenario.addPlayersWithApps([appSource, appSource]);
+    const [alice, bob] = await scenario.addPlayersWithApps([
+      appSource,
+      appSource,
+    ]);
 
     // Shortcut peer discovery through gossip and register all agents in every
     // conductor of the scenario.
@@ -116,7 +127,7 @@ test('create and delete Comment', async () => {
     let linksToPosts: Link[] = await bob.cells[0].callZome({
       zome_name: "posts",
       fn_name: "get_comments_for_post",
-      payload: sample.post_hash
+      payload: sample.post_hash,
     });
     assert.equal(linksToPosts.length, 1);
     assert.deepEqual(linksToPosts[0].target, record.signed_action.hashed.hash);
@@ -131,38 +142,42 @@ test('create and delete Comment', async () => {
 
     // Wait for the entry deletion to be propagated to the other node.
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
-        
+
     // Bob gets the oldest delete for the Comment
-    const oldestDeleteForComment: SignedActionHashed = await bob.cells[0].callZome({
-      zome_name: "posts",
-      fn_name: "get_oldest_delete_for_comment",
-      payload: record.signed_action.hashed.hash,
-    });
+    const oldestDeleteForComment: SignedActionHashed =
+      await bob.cells[0].callZome({
+        zome_name: "posts",
+        fn_name: "get_oldest_delete_for_comment",
+        payload: record.signed_action.hashed.hash,
+      });
     assert.ok(oldestDeleteForComment);
-        
+
     // Bob gets the deletions for the Comment
-    const deletesForComment: SignedActionHashed[] = await bob.cells[0].callZome({
-      zome_name: "posts",
-      fn_name: "get_all_deletes_for_comment",
-      payload: record.signed_action.hashed.hash,
-    });
+    const deletesForComment: SignedActionHashed[] = await bob.cells[0].callZome(
+      {
+        zome_name: "posts",
+        fn_name: "get_all_deletes_for_comment",
+        payload: record.signed_action.hashed.hash,
+      },
+    );
     assert.equal(deletesForComment.length, 1);
 
     // Bob gets the Posts for the Comment again
     linksToPosts = await bob.cells[0].callZome({
       zome_name: "posts",
       fn_name: "get_comments_for_post",
-      payload: sample.post_hash
+      payload: sample.post_hash,
     });
     assert.equal(linksToPosts.length, 0);
 
-    // Bob gets the deleted Posts for the Comment 
-    const deletedLinksToPosts: Array<[SignedActionHashed<CreateLink>, SignedActionHashed<DeleteLink>[]]> = await bob.cells[0].callZome({
+    // Bob gets the deleted Posts for the Comment
+    const deletedLinksToPosts: Array<
+      [SignedActionHashed<CreateLink>, SignedActionHashed<DeleteLink>[]]
+    > = await bob.cells[0].callZome({
       zome_name: "posts",
       fn_name: "get_deleted_comments_for_post",
-      payload: sample.post_hash
+      payload: sample.post_hash,
     });
     assert.equal(deletedLinksToPosts.length, 1);
-
   });
 });

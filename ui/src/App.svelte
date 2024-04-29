@@ -46,7 +46,7 @@ import CreateTodo from './todos/todos/CreateTodo.svelte';
         </ol>
     </div>
   {/if}
-</main>
+    </main>
 
 <style>
   main {
@@ -55,6 +55,8 @@ import CreateTodo from './todos/todos/CreateTodo.svelte';
     max-width: 240px;
     margin: 0 auto;
   }
+
+  
 
   @media (min-width: 640px) {
     main {

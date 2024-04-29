@@ -36,10 +36,7 @@
     },
     "crane": {
       "inputs": {
-        "nixpkgs": [
-          "holochain-flake",
-          "nixpkgs"
-        ]
+        "nixpkgs": ["holochain-flake", "nixpkgs"]
       },
       "locked": {
         "lastModified": 1707363936,
@@ -164,30 +161,16 @@
         "empty": "empty",
         "flake-compat": "flake-compat",
         "flake-parts": "flake-parts",
-        "holochain": [
-          "holochain-flake",
-          "empty"
-        ],
-        "lair": [
-          "holochain-flake",
-          "empty"
-        ],
-        "launcher": [
-          "holochain-flake",
-          "empty"
-        ],
+        "holochain": ["holochain-flake", "empty"],
+        "lair": ["holochain-flake", "empty"],
+        "launcher": ["holochain-flake", "empty"],
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
         "pre-commit-hooks-nix": "pre-commit-hooks-nix",
         "repo-git": "repo-git",
         "rust-overlay": "rust-overlay",
-        "scaffolding": [
-          "holochain-flake",
-          "empty"
-        ],
-        "versions": [
-          "versions"
-        ]
+        "scaffolding": ["holochain-flake", "empty"],
+        "versions": ["versions"]
       },
       "locked": {
         "lastModified": 1714419254,
@@ -315,25 +298,16 @@
     },
     "root": {
       "inputs": {
-        "flake-parts": [
-          "holochain-flake",
-          "flake-parts"
-        ],
+        "flake-parts": ["holochain-flake", "flake-parts"],
         "holochain-flake": "holochain-flake",
-        "nixpkgs": [
-          "holochain-flake",
-          "nixpkgs"
-        ],
+        "nixpkgs": ["holochain-flake", "nixpkgs"],
         "versions": "versions"
       }
     },
     "rust-overlay": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": [
-          "holochain-flake",
-          "nixpkgs"
-        ]
+        "nixpkgs": ["holochain-flake", "nixpkgs"]
       },
       "locked": {
         "lastModified": 1714356894,
