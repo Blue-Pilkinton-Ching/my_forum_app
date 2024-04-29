@@ -35,4 +35,14 @@ export type PostsSignal = {
   link_type: string;
 };
 
-export type EntryTypes = {};
+export type EntryTypes =
+ | ({  type: 'Post'; } & Post);
+
+
+
+export interface Post { 
+  title: string;
+
+  content: string;
+}
+
